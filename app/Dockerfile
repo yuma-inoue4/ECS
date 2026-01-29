@@ -1,9 +1,9 @@
 FROM node:22-alpine
 
-workdir /app
+WORKDIR /app
 
-copy . .
+COPY . .
 
-npm install
+RUN npm install
 
-cmd ["npm", "start"]
+CMD ["npm", "start"]
