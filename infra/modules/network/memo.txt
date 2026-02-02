@@ -1,6 +1,6 @@
 ネットワークにて作成するリソース一覧
-VPC (基盤: 最初に作成)
-├ IGW (Internet Gateway: VPCにアタッチ)
+[済] VPC (基盤: 最初に作成)
+├ [済] IGW (Internet Gateway: VPCにアタッチ)
 ├ VPC Endpoint (VPCに関連付け)
 ├ Route Table (RT: VPCに作成、Subnetに関連付け)
 ├ Security Group (SG: VPCに作成、Subnetのリソースで使用)
