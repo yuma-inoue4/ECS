@@ -44,6 +44,7 @@ module "private_rt" {
   name       = "${var.project}-${var.environment}-private_rt"
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.private_subnet.subnet_ids
+  routes     = {}
 }
 
 ### public ###
