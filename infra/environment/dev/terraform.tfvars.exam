@@ -1,11 +1,110 @@
 #--------------------------------
 # tags
 #--------------------------------
-project = "ecs-practice"
+project     = "ecs-practice"
 environment = "dev"
 
 #--------------------------------
-# network
-#--------------------------------
 # vpc
+#--------------------------------
 cidr_block = "10.0.0.0/16"
+
+#--------------------------------
+# subnet
+#--------------------------------
+### public ###
+public_subnets = {
+  "public_subnet-1" = {
+    cidr_block              = "10.0.1.0/24"
+    availability_zone       = "ap-northeast-1a"
+    map_public_ip_on_launch = true
+  }
+  "public_subnet-2" = {
+    cidr_block              = "10.0.2.0/24"
+    availability_zone       = "ap-northeast-1c"
+    map_public_ip_on_launch = true
+  }
+}
+
+### private ###
+private_subnets = {
+  "private_subnet-1" = {
+    cidr_block              = "10.0.3.0/24"
+    availability_zone       = "ap-northeast-1a"
+    map_public_ip_on_launch = false
+  }
+  "private_subnet-2" = {
+    cidr_block              = "10.0.4.0/24"
+    availability_zone       = "ap-northeast-1c"
+    map_public_ip_on_launch = false
+  }
+}
+
+#--------------------------------
+# sg
+#--------------------------------
+### forntend_sg ###
+# in : allow tcp 80/443
+# out: allow all tarffic
+frontend_sg = {
+  in_http = {
+    type        = "ingress"
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  in_https = {
+    type        = "ingress"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  out_all = {
+    type        = "egress"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    # 0...全ポート / -1...全プロトコル
+  }
+}
+
+### webapp_sg ###
+# in : allow tcp 3000
+# out: allow all tarffic
+webapp_sg = {
+  in_http = {
+    type        = "ingress"
+    protocol    = "tcp"
+    from_port   = 3000
+    to_port     = 3000
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  out_all = {
+    type        = "egress"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    # 0...全ポート / -1...全プロトコル
+  }
+}
+
+### database_sg ###
+# in : allow tcp 3306
+# out: allow all tarffic
+database_sg = {
+  out_all = {
+    type        = "egress"
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    # 0...全ポート / -1...全プロトコル
+  }
+}

@@ -7,7 +7,7 @@
 module "frontend_sg" {
   source = "../../modules/network/sg"
   name   = "${var.project}-${var.environment}-frontend_sg"
-  vpc_id = module.vpc.vpc_id
+  vpc_id = module.network.vpc_id
   sgs    = var.frontend_sg
 }
 
@@ -15,7 +15,7 @@ module "frontend_sg" {
 module "webapp_sg" {
   source = "../../modules/network/sg"
   name   = "${var.project}-${var.environment}-webapp_sg"
-  vpc_id = module.vpc.vpc_id
+  vpc_id = module.network.vpc_id
   sgs    = var.webapp_sg
 }
 
@@ -23,8 +23,9 @@ module "webapp_sg" {
 module "database_sg" {
   source = "../../modules/network/sg"
   name   = "${var.project}-${var.environment}-database_sg"
-  vpc_id = module.vpc.vpc_id
+  vpc_id = module.network.vpc_id
 
+  # webapp_sg からのtrafficを許可
   sgs = merge(var.database_sg, {
     "in_tcp_3306_from_webapp" = {
       type                     = "ingress"

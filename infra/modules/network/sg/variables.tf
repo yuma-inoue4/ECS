@@ -1,11 +1,12 @@
-variable "vpc_id" {
-  type = string
-}
+#--------------------------------
+# tags
+#--------------------------------
+variable "name" { type = string }
+variable "vpc_id" { type = string }
 
-variable "name" {
-  type = string
-}
-
+#--------------------------------
+# SG
+#--------------------------------
 variable "sgs" {
   default = {}
   type = map(object({
