@@ -1,11 +1,10 @@
 # frontend, webapp, database, vpc_ep
-
 #--------------------------------
 # sg
 #--------------------------------
 # frontend_sg
 module "frontend_sg" {
-  source = "../../modules/network/sg"
+  source = "../../modules/sg"
   name   = "${var.project}-${var.environment}-frontend_sg"
   vpc_id = module.network.vpc_id
   sgs    = var.frontend_sg
@@ -13,7 +12,7 @@ module "frontend_sg" {
 
 # webapp_sg
 module "webapp_sg" {
-  source = "../../modules/network/sg"
+  source = "../../modules/sg"
   name   = "${var.project}-${var.environment}-webapp_sg"
   vpc_id = module.network.vpc_id
   sgs    = var.webapp_sg
@@ -21,7 +20,7 @@ module "webapp_sg" {
 
 # database_sg
 module "database_sg" {
-  source = "../../modules/network/sg"
+  source = "../../modules/sg"
   name   = "${var.project}-${var.environment}-database_sg"
   vpc_id = module.network.vpc_id
 
@@ -32,14 +31,14 @@ module "database_sg" {
       protocol                 = "tcp"
       from_port                = 3306
       to_port                  = 3306
-      source_security_group_id = module.webapp_sg.security_group_id
+      source_security_group_id = module.webapp_sg.sg_ids
     }
   })
 }
 
 # vpc_endpoint_sg
 module "vpc_endpoint_sg" {
-  source = "../../modules/network/sg"
+  source = "../../modules/sg"
   name   = "${var.project}-${var.environment}-vpc-endpoint-sg"
   vpc_id = module.network.vpc_id
 
