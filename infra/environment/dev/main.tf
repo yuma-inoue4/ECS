@@ -1,8 +1,8 @@
 #--------------------------------
 # network
 #--------------------------------
-module "network" {
-  source     = "../../modules/network"
+module "vpc_base" {
+  source     = "../../modules/vpc_base"
   name       = "${var.project}-${var.environment}"
   cidr_block = var.cidr_block
 
