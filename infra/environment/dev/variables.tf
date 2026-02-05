@@ -1,4 +1,19 @@
 #--------------------------------
+# local vars
+#--------------------------------
+locals { # vpc_endpointで使用
+  type_if        = "Interface"
+  type_gw        = "Gateway"
+  service_prefix = "com.amazonaws"
+}
+
+#--------------------------------
+# data
+#--------------------------------
+# 現在のASWリージョン情報を取得する
+data "aws_region" "current" {}
+
+#--------------------------------
 # tags
 #--------------------------------
 variable "project" {
@@ -10,9 +25,6 @@ variable "environment" {
   type    = string
   default = "dev"
 }
-
-# 現在のASWリージョン情報を取得する
-data "aws_region" "current" {}
 
 #--------------------------------
 # vpc
@@ -184,4 +196,14 @@ variable "ssmmessages" {
     subnet_ids          = optional(list(string))
     private_dns_enabled = optional(bool)
   }))
+}
+
+#--------------------------------
+# ecr
+#--------------------------------
+variable "image_tag_mutability" { type = string }
+variable "scan_on_push" { type = bool }
+variable "force_delete" {
+  type    = bool
+  default = false
 }
