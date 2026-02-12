@@ -259,11 +259,6 @@ variable "mysql_password" {
 #------------------------------
 # ECS
 #------------------------------
-### policy and role / cloudwatch log ###
-# variable "policy_name" { type = string }
-# variable "role_name" { type = string }
-# variable "log_name" { type = string }
-
 variable "retention_in_days" {
   description = "ログの保存期間(デフォルトは無期限)"
   type        = number
@@ -274,29 +269,13 @@ variable "retention_in_days" {
 variable "container_insights" { type = string }
 
 ### task definition ###
-# variable "family" {
-#   description = "タスク定義の名前"
-#   type        = string
-# }
-variable "network_mode" {
-  description = "Fargate なら awsvpcを指定"
-  type        = string
-}
-variable "requires_compatibilities" {
-  description = "起動タイプ"
-  type        = list(string)
-}
-
+variable "network_mode" { type = string }
+variable "requires_compatibilities" { type = list(string) }
 variable "cpu" { type = number }
 variable "memory" { type = number }
-
-### container ###
-#variable "container_name" { type = string }
-# variable "image_uri" { type = string }
 variable "container_port" { type = number }
 
 ### service ###
-# variable "service_name" { type = string }
 variable "desired_count" {
   description = "【重要】常に稼働させるコンテナの数"
   type        = number
@@ -308,4 +287,47 @@ variable "launch_type" {
 variable "assign_public_ip" {
   description = "ブリックIPが必要か否か、Public Subnet なら true"
   type        = bool
+}
+
+#------------------------------
+# task definition
+#------------------------------
+# logConfiguration(ログの出力先)は、mainにハードコード
+
+variable "task" {
+  description = "タスク定義"
+  type = object({
+
+    # foundation
+    family                   = string
+    requires_compatibilities = list(string) # 起動モード
+    network_mode             = string       # NWモード(Fargateならawsvpc)
+    cpu                      = number
+    memory                   = number
+
+    # os / cpu
+    runtime_platform = object({
+      operating_system_family = string # 使用するOS(FargateはLinuxを指定)
+      cpu_architecture        = string # 使用するCPU(M系CPUのMCはARM64を指定)
+    })
+
+    # container_config
+    container_name = string # コンテナ名
+    container_port = number # コンテナポート(Fargateの場合は、hostと揃える)
+    image_uri      = string
+    essential      = bool   # 停止フラグ(Tのコンテナが止まるとタスク全体が停止する)
+    protocol       = string # 使用プロトコル(tcp)
+  })
+}
+
+variable "db_config" {
+  description = "データベースの接続情報"
+  type = object({
+    host     = string
+    database = string
+    username = string
+    password = string
+    ssl      = string
+  })
+  sensitive = true # planに非出力(stateには記述される点に留意)
 }

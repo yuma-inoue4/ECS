@@ -12,7 +12,7 @@
 #------------------------------
 # elb
 #------------------------------
-resource "aws_lb" "frontend" {
+resource "aws_lb" "main" {
   tags                       = { Name = var.lb_name }
   name                       = var.lb_name
   security_groups            = var.security_groups
@@ -68,7 +68,7 @@ resource "aws_lb_target_group" "ecs" {
 #------------------------------
 resource "aws_lb_listener" "http" {
   tags              = { Name = var.listener_name }
-  load_balancer_arn = aws_lb.frontend.arn
+  load_balancer_arn = aws_lb.main.arn
   port              = var.listener_port
   protocol          = var.listener_protocol
 

@@ -69,95 +69,71 @@ resource "aws_iam_role_policy_attachment" "ecs_exec_task" {
 #------------------------------
 # Cloudwatch Log Group
 #------------------------------
-resource "aws_cloudwatch_log_group" "webapp" {
+resource "aws_cloudwatch_log_group" "main" {
   tags              = { Name = var.log_name }
   name              = var.log_name
   retention_in_days = var.retention_in_days
 }
 
 #------------------------------
-# ECS
+# ECS / Cluster
 #------------------------------
-### cluster ###
 resource "aws_ecs_cluster" "main" {
   name = var.cluster_name
   tags = { Name = var.cluster_name }
 
   # Cloudwatchにメトリクスを送信する機能
-  setting { 
+  setting {
     name  = "containerInsights"    # 固定(これしか指定できない)
     value = var.container_insights # enable or disabled
   }
 }
 
-### task definition ###
-resource "aws_ecs_task_definition" "webapp" {
-  family = var.family
-
-  # ECSが使用するIAMロール
+#------------------------------
+# ECS / Task Definition
+#------------------------------
+resource "aws_ecs_task_definition" "main" {
   execution_role_arn       = aws_iam_role.ecs_exec.arn
+  family                   = var.family
+  cpu                      = var.task_conf.cpu
+  memory                   = var.task_conf.memory
+  network_mode             = var.task_conf.network_mode
+  requires_compatibilities = var.task_conf.requires_compatibilities
 
-  # タスクの起動タイプ(有効な値: EC2, EXTERNAL, FARGATE, MANAGED_INSTANCES)
-  requires_compatibilities = var.requires_compatibilities
-  
-  # コンテナのNWモード(有効な値: awsvpc、bridge、host、none)
-  network_mode             = var.network_mode
-
-  # H/W スペックに関する指定
-  cpu                      = var.cpu
-  memory                   = var.memory
-
-  # 「このタスクは X86_64 (AMD64) で動かす」と明示的に設定
   runtime_platform {
-    # Fargateの場合は、ここでOSを指定
-    operating_system_family = "LINUX"
-    # CPUを指定(M系CPUのMACはARM64を指定)
-    cpu_architecture        = "ARM64"
+    operating_system_family = var.task.platform.operating_system_family
+    cpu_architecture        = var.task.platform.cpu_architecture
   }
 
-  ### container definition ###
+  # コンテナ設定
   container_definitions = jsonencode([
     {
-      name  = var.container_name
-      image = var.image_uri
-      # コンテナフラグ(trueに指定されたコンテナが停止するとタスク全体が停止)
-      essential = true
-      # ポートフォワーディング設定(Fagateは、container,hostのportを同じに設定)
+      name      = var.task_conf.name
+      image     = var.task_conf.image_uri
+      essential = var.task_conf.essential
+
+      # ポートフォワーディング設定
       portMappings = [
         {
-          containerPort = var.container_port
-          hostPort      = var.container_port
-          protocol      = "tcp"
+          containerPort = var.task_conf.port
+          hostPort      = var.task_conf.port
+          protocol      = var.task_conf.protocol
         }
       ]
+      # 環境変数設定(DB)
       environment = [
-        {
-          name  = "MYSQL_HOST"
-          value = var.mysql_host
-        },
-        {
-          name  = "MYSQL_USER"
-          value = var.mysql_username
-        },
-        {
-          name  = "MYSQL_PASSWORD"
-          value = var.mysql_password
-        },
-        {
-          name  = "MYSQL_DATABASE"
-          value = var.mysql_database
-        },
-        {
-          name  = "MYSQL_SSL"
-          value = var.mysql_ssl
-        }
+        { name = "MYSQL_HOST", value = var.db_conf.host },
+        { name = "MYSQL_USER", value = var.db_conf.username },
+        { name = "MYSQL_PASSWORD", value = var.db_conf.password },
+        { name = "MYSQL_DATABASE", value = var.db_conf.database },
+        { name = "MYSQL_SSL", value = var.db_conf.ssl }
       ]
-      # ログの出力先(logDriver="awslogs" に指定するとCloudWatch logs にログ転送する)
+
+      # ログ設定(ログの出力先)
       logConfiguration = {
-        logDriver = "awslogs"
-        # 具体的な転送先を指定 (どのロググループ, どのリージョン)
+        logDriver = "awslogs" # awslogs -> Cloudwatch logsに出力
         options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.webapp.id
+          "awslogs-group"         = aws_cloudwatch_log_group.main.id
           "awslogs-region"        = data.aws_region.current.id
           "awslogs-stream-prefix" = "ecs"
         }
@@ -166,25 +142,27 @@ resource "aws_ecs_task_definition" "webapp" {
   ])
 }
 
-### service ###
-resource "aws_ecs_service" "webapp" {
-  tags = { Name = var.service_name }
-
-  name            = var.service_name
+#------------------------------
+# ECS / Service
+#------------------------------
+resource "aws_ecs_service" "main" {
+  tags            = { Name = var.service_conf.service_name }
   cluster         = aws_ecs_cluster.main.arn
-  task_definition = aws_ecs_task_definition.webapp.arn
-  desired_count   = var.desired_count
-  launch_type     = var.launch_type
+  task_definition = aws_ecs_task_definition.main.arn
+
+  name          = var.service_conf.service_name
+  desired_count = var.service_conf.desired_count
+  launch_type   = var.service_conf.launch_type
 
   network_configuration {
-    subnets          = var.subnets
-    security_groups  = var.security_groups
-    assign_public_ip = var.assign_public_ip
+    subnets          = var.service_conf.subnets
+    security_groups  = var.service_conf.security_groups
+    assign_public_ip = var.service_conf.assign_public_ip
   }
 
   load_balancer {
-    target_group_arn = var.target_group_arn
-    container_name   = var.container_name
-    container_port   = var.container_port
+    target_group_arn = var.service_conf.target_group_arn
+    container_name   = var.task_conf.name
+    container_port   = var.task_conf.port
   }
 }

@@ -15,7 +15,7 @@ module "webapp_sg" {
   name   = "${var.project}-${var.environment}-webapp_sg"
   vpc_id = module.vpc_base.vpc_id
   sgs    = var.webapp_sg
-  }
+}
 
 ### database_sg ###
 module "database_sg" {

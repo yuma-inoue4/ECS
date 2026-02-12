@@ -81,15 +81,12 @@ module "ecs_webapp" {
   requires_compatibilities = var.requires_compatibilities
 
   ### task definition -> container definition ###
-  container_name = "webapp"
-  container_port = var.container_port
-  image_uri      = "${data.aws_ecr_repository.webapp.repository_url}:latest"
+  # container_name = "webapp"
+  # container_port = var.container_port
+  image_uri = "${data.aws_ecr_repository.webapp.repository_url}:latest"
 
-  mysql_database = var.mysql_database
-  mysql_username = var.mysql_username
-  mysql_password = var.mysql_password
-  mysql_host     = var.mysql_host
-  mysql_ssl      = var.mysql_ssl
+  task      = var.task
+  db_config = var.db_config
 
   ### service ###
   service_name     = "${var.project}-${var.environment}-ecs-webapp-service"
