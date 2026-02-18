@@ -3,7 +3,7 @@ output "load_balancer_arn" {
 }
 
 output "tg_arn" {
-  value = aws_lb_target_group.ecs.arn
+  value = aws_lb_target_group.main.arn
 }
 
 output "dns_name" {

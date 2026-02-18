@@ -67,6 +67,11 @@ variable "db_conf" {
   sensitive = true # planに非出力(stateには記述される点に留意)
 }
 
+variable "mysql_secret_arn" {
+  description = "Secrets Manager の MySQL 用シークレット ARN。ECS の valueFrom で参照する。"
+  type        = string
+}
+
 #------------------------------
 # service
 #------------------------------

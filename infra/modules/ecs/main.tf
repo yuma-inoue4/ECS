@@ -120,12 +120,15 @@ resource "aws_ecs_task_definition" "main" {
           protocol      = var.task_conf.protocol
         }
       ]
+      # Secrets Manager から取得（valueFrom = シークレット ARN。値ではなく ARN を渡す）
+      secrets = [
+        { name = "MYSQL_HOST", valueFrom = "${var.mysql_secret_arn}:key:hostname::" },
+        { name = "MYSQL_USER", valueFrom = "${var.mysql_secret_arn}:key:username::" },
+        { name = "MYSQL_PASSWORD", valueFrom = "${var.mysql_secret_arn}:key:password::" },
+        { name = "MYSQL_DATABASE", valueFrom = "${var.mysql_secret_arn}:key:database::" },
+      ]
       # 環境変数設定(DB)
       environment = [
-        { name = "MYSQL_HOST", value = var.db_conf.host },
-        { name = "MYSQL_USER", value = var.db_conf.username },
-        { name = "MYSQL_PASSWORD", value = var.db_conf.password },
-        { name = "MYSQL_DATABASE", value = var.db_conf.database },
         { name = "MYSQL_SSL", value = var.db_conf.ssl }
       ]
 

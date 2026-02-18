@@ -1,4 +1,13 @@
 #--------------------------------
+# local vars
+#--------------------------------
+locals { # vpc_endpointで使用
+  type_interface = "Interface"
+  type_gateway   = "Gateway"
+  service_prefix = "com.amazonaws"
+}
+
+#--------------------------------
 # vpce
 #--------------------------------
 # (if型 -> sg & subnet) / (gw型 -> rt)

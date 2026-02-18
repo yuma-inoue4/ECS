@@ -18,46 +18,6 @@ data "aws_ecr_repository" "webapp" {
 }
 
 #--------------------------------
-# ELB
-#--------------------------------
-### frontend_alb ###
-module "frontend" {
-  source                     = "../../modules/alb"
-  lb_name                    = "${var.project}-${var.environment}-alb-frontend"
-  internal                   = var.internal
-  load_balancer_type         = var.load_balancer_type
-  security_groups            = [module.frontend_sg.sg_ids]
-  subnets                    = values(module.vpc_base.public_subnet_ids)
-  enable_deletion_protection = var.enable_deletion_protection
-  enable_http2               = var.enable_http2
-
-  ### target_group ###
-  tg_name     = "${var.project}-${var.environment}-tg-frontend"
-  vpc_id      = module.vpc_base.vpc_id
-  port        = var.port
-  protocol    = var.protocol
-  target_type = var.target_type
-
-  ### health_check ###
-  path                = var.path
-  interval            = var.interval
-  timeout             = var.timeout
-  healthy_threshold   = var.healthy_threshold
-  unhealthy_threshold = var.unhealthy_threshold
-  matcher             = var.matcher
-  hc_port             = var.hc_port
-  hc_protocol         = var.hc_protocol
-
-  ### listener ###
-  listener_name     = "${var.project}-${var.environment}-listener-frontend"
-  listener_port     = var.listener_port
-  listener_protocol = var.listener_protocol
-
-  ### default_action ###
-  listener_type = var.listener_type
-}
-
-#--------------------------------
 # ECS
 #--------------------------------
 module "ecs_webapp" {
@@ -74,10 +34,11 @@ module "ecs_webapp" {
   container_insights = var.container_insights
 
   ### Task definition ###
-  family    = "${var.project}-${var.environment}-ecs-webapp-task"
-  image_uri = "${data.aws_ecr_repository.webapp.repository_url}:latest"
-  task_conf = var.task_conf
-  db_conf   = var.db_conf
+  family           = "${var.project}-${var.environment}-ecs-webapp-task"
+  image_uri        = "${data.aws_ecr_repository.webapp.repository_url}:latest"
+  task_conf        = var.task_conf
+  db_conf          = local.db_conf_input
+  mysql_secret_arn = module.secrets_manager.secret_arn
 
   ### Service ###
   service_name     = "${var.project}-${var.environment}-ecs-webapp-service"
@@ -85,4 +46,46 @@ module "ecs_webapp" {
   subnets          = values(module.vpc_base.private_subnet_ids)
   security_groups  = [module.webapp_sg.sg_ids]
   target_group_arn = module.frontend.tg_arn
+}
+
+locals {
+  db_conf_input = merge(var.db_conf, {
+    host = module.rds.address
+  })
+}
+
+#------------------------------
+# RDS
+#------------------------------
+module "rds" {
+  source     = "../../modules/rds"
+  rds_conf   = local.rds_module_input
+  subnet_ids = values(module.vpc_base.private_subnet_ids)
+  parameters = var.parameters
+}
+
+locals {
+  rds_module_input = merge(var.rds_conf, {
+    identifier             = "${var.project}-${var.environment}-mysql"
+    name                   = "${var.project}-${var.environment}-mysql"
+    vpc_security_group_ids = [module.database_sg.sg_ids]
+    db_subnet_group_name   = "${var.project}-${var.environment}-rds-subnet-group"
+    parameter_group_name   = "${var.project}-${var.environment}-mysql-params"
+  })
+}
+
+#--------------------------------
+# secrets manager
+#--------------------------------
+module "secrets_manager" {
+  source                  = "../../modules/secrets_manager"
+  secret_name             = "${var.project}-${var.environment}-mysql-secret"
+  description             = var.description
+  recovery_window_in_days = var.recovery_window_in_days
+  secret_string = merge(var.secret_string, {
+    username = var.db_conf.username
+    password = var.db_conf.password
+    database = var.db_conf.database
+    hostname = module.rds.address
+  })
 }

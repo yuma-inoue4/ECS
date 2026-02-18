@@ -1,54 +1,49 @@
 # ToDo Application
 
-# 利用アーキテクチャ
+## 利用アーキテクチャ
 
 - Node.js v20
 - MySQL v8
 
-# 利用方法
+## 利用方法
 
-1. データベースの準備
+### 1. データベースの準備
 
-    1. database を最初に準備
+1. database を最初に準備  
+   名前は任意でOK。以下の例では `todo` で作成。
 
-        名前は任意でOK。以下の例では `todo` で作成。
+   ```sql
+   CREATE DATABASE todo;
+   ```
 
-        ```
-        CREATE DATABASE todo;
-        ```
+2. 作成したデータベースにスキーマを作成  
+   `db/initdb/01-schema.sql` を実行
 
-    1. 作成したデータベースにスキーマを作成
+3. サンプルデータの投入  
+   `db/initdb/02-sampledata.sql` を実行
 
-        `/data/MySQL/ddl.sql` を実行
+### 2. アプリの実行準備
 
-    1. サンプルデータの投入
+1. 環境変数ファイル `.env` を用意
 
-        `/data/MySQL/sampledata.sql` を実行
+   ```
+   MYSQL_HOST=<YOUR_HOST_NAME>
+   MYSQL_USER=<USERNAME>
+   MYSQL_PASSWORD=<PASSWORD>
+   MYSQL_DATABASE=<DATABASE_NAME>
+   ```
 
-1. アプリの実行準備
+2. パッケージのインストール
 
-    1. 環境変数ファイル `.env` を用意
+   ```bash
+   cd app && npm install
+   ```
 
-        `.env` ファイルには以下の設定を行う
+### 3. アプリの実行
 
-        ```
-        MYSQL_HOST=<YOUR_HOST_NAME>
-        MYSQL_USER=<USERNAME>
-        MSYQL_PASSWORD=<PASSWORD>
-        MYSQL_DATABASE=<DATABASE_NAME>
-        ```
-
-    1. パッケージのインストール
-
-        ```
-        npm install
-        ```
-
-1. アプリの実行
-
-    ```
-    npm start
-    ```
+```bash
+cd app && npm start
+```
 
 ## GitHub Actions へのシークレット設定
 
